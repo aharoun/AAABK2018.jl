@@ -1,28 +1,35 @@
 function solveBGP(p)
 
 
-  eqvInit = [    1.9173927781631097,
- 0.5505605266478315,
- 0.06289599199350393,
- 0.713246861682734,
- 0.8347328650471704,
- 1.732272083084665
-]
+  eqvInit = [2.91739277816310,
+            0.350560526647831,
+            0.162895991993503,
+            0.513246861682734,
+            0.234732865047170,
+            1.632272083084665
+            ]
+
+eq = EqObj();
+
+# gausslegendre for integration
+eq.qMinAll = 1.0e-8
+eq.qMaxAll = 10.0
+eq.node,eq.weight = gausslegendre(1000)  # to-do: take this outside of eqfunc to spedd up
+eq.node = ((eq.qMaxAll - eq.qMinAll)/2)*eq.node .+ (eq.qMaxAll + eq.qMinAll)/2    # adjust the limits
 
 
- function objFnc(x)
-   out, _ = eqfunc(x,p);
-   return out
- end
 
- res = nlsolve(objFnc, eqvInit, method = :trust_region,inplace = false);  # to-do: make inplace true version
+@inline function objFnc(eqnd,x)
+   eqfunc!(eqnd,x,eq,p);
+end
+
+ res = nlsolve(objFnc, eqvInit, method = :trust_region,inplace = true);  # to-do: make inplace true version
 
  if !res.f_converged
      print("👎")
-   eq = EqObj();  # return empty EqObj, type stability
+     eq = EqObj();  # return empty EqObj, type stability
  else
      print("👍")
-     err,eq = eqfunc(res.zero,p);
  end
 
 
@@ -33,18 +40,13 @@ end
 
 ######################################################
 
-function eqfunc(eqv,p)
+function eqfunc!(eqnd,eqv,eq,p)
   # reject out of bounds
-  eq = EqObj();
+
   if (any(eqv.<0.0))
     eqnd = -1000.0*ones(size(eqv)[1])
 
   else
-    # gausslegendre for integration
-    eq.qMinAll = 1.0e-8
-    eq.qMaxAll = 10.0
-    eq.node,eq.weight = gausslegendre(1000)  # to-do: take this outside of eqfunc to spedd up
-    eq.node = ((eq.qMaxAll - eq.qMinAll)/2)*eq.node .+ (eq.qMaxAll + eq.qMinAll)/2    # adjust the limits
 
 
     # load in guesses for solution
@@ -68,7 +70,7 @@ function eqfunc(eqv,p)
 
 
     # equilibrium differences
-    eqnd = -1000.0*ones(size(eqv)[1])
+
     eqnd[1]   = eq.skilled_lab - p.Ls                # skilled labor market clearing
     eqnd[2:3] = eq.cactiv      - eqv[2:3]       # product shares
     eqnd[4:5] = eq.eyq         - eqv[4:5]       # innovated product value
@@ -76,7 +78,6 @@ function eqfunc(eqv,p)
 
 
   end
-  return eqnd,eq
 
 end
 
@@ -126,7 +127,7 @@ function qualityDist!(eq,p)
     lags = [betaDelay]
     h(p,t)= [0.0];
     probDelay  = DDEProblem(funcFAll!,[1.0e-16],h,tspan, constant_lags = lags)
-    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5())) # to-do: we can directly get output at the nodes by using ``saveat``
+    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()),reltol=1e-8,abstol=1e-8) # to-do: we can directly get output at the nodes by using ``saveat``
     # option and pass it to integration functions. One issue is I can't do this with solFAll because interpolation is used by below diff eq.
 
     eq.FAllend = eq.solFAll.u[end][1,1]  # needed for normalization

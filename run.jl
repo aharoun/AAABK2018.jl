@@ -4,8 +4,6 @@ include("AAABK_Baseline.jl")
 using Main.AAABK_Baseline
 using BenchmarkTools
 
-
-
 λ =  1.131874350361868
 ψ =  0.037175089899834
 ν =  0.205622086535123
@@ -23,8 +21,7 @@ Ls=  0.165500000000000
 ω =  1.0
 
 
-
 p = Params(λ,ψ,ν, α, ϕ, θL, θH, θE, ε, ρ, γ, γE, σ, Ls, ω)
 
 eq,res = solveBGP(p);
-@time eq,res = solveBGP(p);
+@benchmark eq,res = solveBGP(p);
