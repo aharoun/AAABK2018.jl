@@ -70,7 +70,7 @@ function eqfunc!(eqnd,eqv,eq,p)
 
     # equilibrium differences
 
-    eqnd[1]   = eq.skilled_lab - p.Ls                # skilled labor market clearing
+    eqnd[1]   = eq.skilled_lab - p.Lˢ                # skilled labor market clearing
     eqnd[2:3] = eq.cactiv      - eqv[2:3]       # product shares
     eqnd[4:5] = eq.eyq         - eqv[4:5]       # innovated product value
     eqnd[6]   = eq.qbarAct     - (p.ε/(p.ε-1.0))^(p.ε - 1)
@@ -88,7 +88,7 @@ function innovation!(eq,p)
 
   # innovation rates
   eq.x    = p.𝚯.* (((1.0 - p.γ)/eq.ws)*eq.eyq).^((1.0 - p.γ)/p.γ)
-  eq.xout = p.θE.*(((1.0 - p.γE)/eq.ws).*sum(p.𝛂.*eq.eyq)).^((1.0 - p.γE)/p.γE)
+  eq.xout = p.θᴱ.*(((1.0 - p.γᴱ)/eq.ws).*sum(p.𝛂.*eq.eyq)).^((1.0 - p.γᴱ)/p.γᴱ)
 
   # option value of R&D
   eq.optval = p.γ*p.𝚯*((1.0 - p.γ)/eq.ws)^((1.0 - p.γ)/p.γ).*eq.eyq.^(1.0/p.γ)
@@ -127,7 +127,7 @@ function qualityDist!(eq,p)
     h(p,t)= [0.0];
     probDelay  = DDEProblem(funcFAll!,[1.0e-16],h,tspan, constant_lags = lags)
     eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()),reltol=1e-8,abstol=1e-8) # to-do: we can directly get output at the nodes by using ``saveat``
-    # option and pass it to integration functions. One issue is I can't do this with solFAll because interpolation is used by below diff eq.
+    # option and pass it to integration functions. One thing to note: once saveat is used, between node results are linearly interpolated.
 
     eq.FAllend = eq.solFAll.u[end][1,1]  # needed for normalization
 
@@ -250,17 +250,17 @@ end
 function labordem!(eq,p)
 
   # managerial fixed cost
-  eq.cfix = eq.cactivtot*p.ϕns
+  eq.cfix = eq.cactivtot*p.ϕⁿˢ
 
   # production labor
   eq.wu = (p.ε - 1.0)/p.ε   # unskilled wage over Q.
 
   # incumbent R&D labor
-  eq.cx = (eq.x./(p.𝚯ns.^p.γ)).^(1.0/(1.0-p.γ))
+  eq.cx = (eq.x./(p.𝚯ⁿˢ.^p.γ)).^(1.0/(1.0-p.γ))
   eq.crnd = sum(eq.cactiv.*eq.cx)
 
   # entrant R&D labor
-  eq.cout = (eq.xout/(p.θEns^p.γE))^(1.0/(1.0-p.γE));
+  eq.cout = (eq.xout/(p.θᴱⁿˢ^p.γᴱ))^(1.0/(1.0-p.γᴱ));
 
   # total skilled labor
   eq.skilled_lab = eq.crnd + eq.cfix + eq.cout
