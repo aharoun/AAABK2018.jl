@@ -4,8 +4,8 @@ function solveBGP(p)
   eqvInit = [    1.9173927781631097,
  0.5505605266478315,
  0.06289599199350393,
- 0.213246861682734,
- 0.4347328650471704,
+ 0.713246861682734,
+ 0.8347328650471704,
  1.732272083084665
 ]
 
@@ -208,7 +208,7 @@ function calcey!(eq,p)
 
   outL, outH = eyfunc(eq,p)
 
-  eyq = [((eq.qMaxAll - eq.qMinAll)/2)*dot(outL,eq.weight), ((eq.qMaxAll - eq.qMinAll)/2)*dot(outH,eq.weight)]
+  eq.eyq = [((eq.qMaxAll - eq.qMinAll)/2)*dot(outL,eq.weight), ((eq.qMaxAll - eq.qMinAll)/2)*dot(outH,eq.weight)]
 
 
 end
