@@ -24,4 +24,4 @@ Ls=  0.165500000000000
 p = Params(λ,ψ,ν, α, ϕ, θL, θH, θE, ε, ρ, γ, γE, σ, Ls, ω)
 
 eq,res = solveBGP(p);
-@benchmark eq,res = solveBGP(p);
+@time eq,res = solveBGP(p)

@@ -100,6 +100,7 @@ mutable struct EqObj
         qMaxAll:: Float64
         node   :: Array{Float64,1}
         weight :: Array{Float64,1}
+        qAllDist::Array{Float64,1}
 
     EqObj() = new()
 end

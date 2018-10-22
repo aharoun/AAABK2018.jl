@@ -1,39 +1,38 @@
 function solveBGP(p)
 
+  eqvInit = [ 2.91739277816310,
+              0.350560526647831,
+              0.162895991993503,
+              0.513246861682734,
+              0.234732865047170,
+              1.632272083084665
+              ]
 
-  eqvInit = [2.91739277816310,
-            0.350560526647831,
-            0.162895991993503,
-            0.513246861682734,
-            0.234732865047170,
-            1.632272083084665
-            ]
+  eq = EqObj();
 
-eq = EqObj();
-
-# gausslegendre for integration
-eq.qMinAll = 1.0e-8
-eq.qMaxAll = 10.0
-eq.node,eq.weight = gausslegendre(1000)  # to-do: take this outside of eqfunc to spedd up
-eq.node = ((eq.qMaxAll - eq.qMinAll)/2)*eq.node .+ (eq.qMaxAll + eq.qMinAll)/2    # adjust the limits
-
+  # gausslegendre for integration
+  eq.qMinAll = 1.0e-8
+  eq.qMaxAll = 10.0
+  eq.node,eq.weight = gausslegendre(3000)
+  eq.node = ((eq.qMaxAll - eq.qMinAll)/2)*eq.node .+ (eq.qMaxAll + eq.qMinAll)/2    # adjust the limits
 
 
-@inline function objFnc(eqnd,x)
-   eqfunc!(eqnd,x,eq,p);
-end
 
- res = nlsolve(objFnc, eqvInit, method = :trust_region,inplace = true);  # to-do: make inplace true version
+  @inline function objFnc(eqnd,x)
+     eqfunc!(eqnd,x,eq,p);
+  end
 
- if !res.f_converged
-     print("👎")
-     eq = EqObj();  # return empty EqObj, type stability
- else
-     print("👍")
- end
+  res = nlsolve(objFnc, eqvInit, method = :trust_region,inplace = true)
+
+  if !res.f_converged
+       print("👎")
+       eq = EqObj();  # return empty EqObj, type stability
+  else
+       print("👍")
+  end
 
 
- return eq,res
+  return eq,res
 
 
 end
@@ -118,7 +117,7 @@ function qualityDist!(eq,p)
 
     # 1 - Overall dist.function
     # to-do: for now it is written for ω=1. Make it general
-    function funcFAll!(du,u,h,p,t)  # to-do: make it inline
+    function funcFAll!(du,u,h,p,t)
         du[1] = (eq.tau/(eq.g*t))*u[1] - (eq.tau/(eq.g*t))*h(p,t-betaDelay)[1] # to-do: tau/g= 1/(λ-1), we can simply use that
     end
 
@@ -131,6 +130,8 @@ function qualityDist!(eq,p)
     # option and pass it to integration functions. One issue is I can't do this with solFAll because interpolation is used by below diff eq.
 
     eq.FAllend = eq.solFAll.u[end][1,1]  # needed for normalization
+
+    eq.qAllDist  = vcat_nosplat(eq.solFAll(eq.node,Val{1}),1).*(1/eq.FAllend) # saving for later use
 
 
     # 2 - Gross dist.
@@ -190,12 +191,11 @@ end
 
 function funQbarAct(eq,p)
 
-        outFAll  = vcat_nosplat(eq.solFAll(eq.node,Val{1}),1).*(1/eq.solFAll.u[end][1,1])  # Val{1} enables du return
         outFH    = vcat_nosplat(eq.solFH(eq.node,Val{1}),1)
         outRest  = eq.solFRest(eq.node,Val{1})
 
-        outL = (outFAll .- outFH .- vcat_nosplat(outRest,2)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[1])
-        outH = (outFH   .- vcat_nosplat(outRest,1))         .*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[2])
+        outL = (eq.qAllDist .- outFH .- vcat_nosplat(outRest,2)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[1])
+        outH = (outFH                .- vcat_nosplat(outRest,1)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[2])
         return outL, outH
 end
 
@@ -215,12 +215,11 @@ function calcey!(eq,p)
 end
 ###################################################
 function eyfunc(eq,p)
-  out   = vcat_nosplat(eq.solFAll(eq.node,Val{1}),1).*(1/eq.solFAll.u[end][1,1]) # to-do: this is calculated at least twice, we can take it to qualityDist()
 
   qPlus = eq.node .+ (p.λ - 1).*(p.ω*eq.qbar .+ (1 - p.ω).*eq.node)
 
-  eyL = zfunc(qPlus,0.0,1,eq,p).*out     # LOW TYPE
-  eyH = (zfunc(qPlus,p.ν,2,eq,p) .+ zfunc(qPlus,0.0,1,eq,p) .- zfunc(qPlus,p.ν,1,eq,p)).*out      # HIGH TYPE
+  eyL = zfunc(qPlus,0.0,1,eq,p).*eq.qAllDist     # LOW TYPE
+  eyH = (zfunc(qPlus,p.ν,2,eq,p) .+ zfunc(qPlus,0.0,1,eq,p) .- zfunc(qPlus,p.ν,1,eq,p)).*eq.qAllDist      # HIGH TYPE
 
   return eyL, eyH
 
