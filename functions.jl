@@ -1,19 +1,13 @@
 function solveBGP(p)
 
 
-  eqvInit = [1.9167531502801942e+00,
-             5.5035518427253116e-01,
-             6.2816712824469115e-02,
-            7.1398401530217703e-01,
-            8.3481281988279321e-01,
-            1.7306237409854832e+00]
-
-  eqvInit = [ 1.9165753642822532,
-            0.5503998860506523,
-             0.06279518700611891,
-             0.7138607955216772,
-             0.8346597073502943,
-             1.7306541656053274]
+  eqvInit = [    1.9173927781631097,
+ 0.5505605266478315,
+ 0.06289599199350393,
+ 0.213246861682734,
+ 0.4347328650471704,
+ 1.732272083084665
+]
 
 
  function objFnc(x)
@@ -41,11 +35,18 @@ end
 
 function eqfunc(eqv,p)
   # reject out of bounds
+  eq = EqObj();
   if (any(eqv.<0.0))
     eqnd = -1000.0*ones(size(eqv)[1])
 
   else
-    eq = EqObj();
+    # gausslegendre for integration
+    eq.qMinAll = 1.0e-8
+    eq.qMaxAll = 10.0
+    eq.node,eq.weight = gausslegendre(1000)  # to-do: take this outside of eqfunc to spedd up
+    eq.node = ((eq.qMaxAll - eq.qMinAll)/2)*eq.node .+ (eq.qMaxAll + eq.qMinAll)/2    # adjust the limits
+
+
     # load in guesses for solution
     eq.ws      = eqv[1]
     eq.cactiv  = eqv[2:3]
@@ -125,7 +126,8 @@ function qualityDist!(eq,p)
     lags = [betaDelay]
     h(p,t)= [0.0];
     probDelay  = DDEProblem(funcFAll!,[1.0e-16],h,tspan, constant_lags = lags)
-    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()))
+    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5())) # to-do: we can directly get output at the nodes by using ``saveat``
+    # option and pass it to integration functions. One issue is I can't do this with solFAll because interpolation is used by below diff eq.
 
     eq.FAllend = eq.solFAll.u[end][1,1]  # needed for normalization
 
@@ -180,64 +182,69 @@ end
 ########################################
 
 function qbarActive!(eq,p)
+  outL,outH = funQbarAct(eq,p)
+  eq.qbarAct  = ((eq.qMaxAll - eq.qMinAll)/2)*(dot(outL,eq.weight) + dot(outH,eq.weight))
+end
+########
 
+function funQbarAct(eq,p)
 
-  #function funQbarAct(x; m1=eq.solFAll, m2 = eq.solFH, m3 = eq.solFRest,eps = p.ε,qmin = eq.qmin)
-  function funQbarAct(x)
-          outFAll  = eq.solFAll(x,Val{1})/eq.solFAll.u[end][1,1]  # Val{1} enables du return
-          outFH    = eq.solFH(x,Val{1})
-          outRest  = eq.solFRest(x,Val{1})
+        outFAll  = vcat_nosplat(eq.solFAll(eq.node,Val{1}),1).*(1/eq.solFAll.u[end][1,1])  # Val{1} enables du return
+        outFH    = vcat_nosplat(eq.solFH(eq.node,Val{1}),1)
+        outRest  = eq.solFRest(eq.node,Val{1})
 
-          outL = (outFAll[1] - outFH[1] - outRest[2])*(x^(p.ε-1))*(x>=eq.qmin[1])
-          outH = (outFH[1]   - outRest[1])           *(x^(p.ε-1))*(x>=eq.qmin[2])
-          out  = hcat(outL, outH)
-  end
-    eq.qbarAct  = sum(quadgk(funQbarAct,1.0e-08,10.0)[1])
+        outL = (outFAll .- outFH .- vcat_nosplat(outRest,2)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[1])
+        outH = (outFH   .- vcat_nosplat(outRest,1))         .*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[2])
+        return outL, outH
 end
 
-#########################################
 
 ###################################################
 
 
 function calcey!(eq,p)
 
-  eq.r = p.ρ + p.σ*eq.g;
+  eq.r = p.ρ + p.σ*eq.g
 
+  outL, outH = eyfunc(eq,p)
 
-  function eyfunc(q; solDiff = eq.solFAll, qbar = eq.qbar, λ = p.λ, ω = p.ω, ν = p.ν)
-    out   = solDiff(q,Val{1})/solDiff.u[end][1,1]
-    qPlus = q + (λ - 1)*(ω*qbar + (1 - ω)*q)
-    eyL = zfunc(qPlus,0.0,1)[1]*out
-    eyH = (zfunc(qPlus,ν,2)[1] + zfunc(qPlus,0.0,1)[1] - zfunc(qPlus,ν,1)[1])*out
-    eyout = vec(hcat(eyL, eyH))
-            # LOW TYPE                 # HIGH TYPE
-  end
+  eyq = [((eq.qMaxAll - eq.qMinAll)/2)*dot(outL,eq.weight), ((eq.qMaxAll - eq.qMinAll)/2)*dot(outH,eq.weight)]
 
-  ###################################################
-
-  function zfunc(q,x,s; tau = eq.tau, r = eq.r, ψ = p.ψ, ε = p.ε, g = eq.g, optval = eq.optval, ws = eq.ws, ϕ = p.ϕ, qmin = eq.qmin)
-
-    psit = r + tau + ψ + x
-
-    kappa1 = psit + (ε - 1.0)*g
-    kappa2 = psit
-
-    coeff1 = p.Π
-    coeff2 = optval[s] - ws*ϕ;
-
-    # this min means that when q <= qmin, qrat = 1.0, so the value contribution is zero
-    qrat = min(1.0,qmin[s]/q);
-
-    zout = coeff1/kappa1*q^(ε-1.0)*(1.0-qrat^(kappa1/g)) + coeff2/kappa2*(1.0-qrat^(kappa2/g))
-
-  end
-
-  eq.eyq = quadgk(eyfunc,1.0e-08,10.0)[1]
 
 end
 ###################################################
+function eyfunc(eq,p)
+  out   = vcat_nosplat(eq.solFAll(eq.node,Val{1}),1).*(1/eq.solFAll.u[end][1,1]) # to-do: this is calculated at least twice, we can take it to qualityDist()
 
+  qPlus = eq.node .+ (p.λ - 1).*(p.ω*eq.qbar .+ (1 - p.ω).*eq.node)
+
+  eyL = zfunc(qPlus,0.0,1,eq,p).*out     # LOW TYPE
+  eyH = (zfunc(qPlus,p.ν,2,eq,p) .+ zfunc(qPlus,0.0,1,eq,p) .- zfunc(qPlus,p.ν,1,eq,p)).*out      # HIGH TYPE
+
+  return eyL, eyH
+
+end
+
+###################################################
+
+function zfunc(q, x, s, eq, p)
+
+  psit = eq.r + eq.tau + p.ψ + x
+
+  kappa1 = psit + (p.ε - 1.0)*eq.g
+  kappa2 = psit
+
+  coeff1 = p.Π
+  coeff2 = eq.optval[s] - eq.ws*p.ϕ;
+
+  # this min means that when q <= qmin, qrat = 1.0, so the value contribution is zero
+  qrat = min.(1.0,eq.qmin[s]./q);
+
+  zout = coeff1/kappa1.*q.^(p.ε-1.0).*(1.0 .- qrat.^(kappa1/eq.g)) .+ coeff2/kappa2.*(1.0 .- qrat.^(kappa2/eq.g))
+
+end
+
+#####################
 
 
 function labordem!(eq,p)
@@ -258,3 +265,8 @@ function labordem!(eq,p)
   # total skilled labor
   eq.skilled_lab = eq.crnd + eq.cfix + eq.cout
 end
+
+#########################################################
+# Utility Functions
+
+vcat_nosplat(y,l) =  eltype(y[l])[el[l] for el in y] # this is for converting weird output of diff solver

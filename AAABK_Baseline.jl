@@ -2,11 +2,10 @@ module AAABK_Baseline
 
 using NLsolve
 using LinearAlgebra
-using SparseArrays
-using SuiteSparse
 using OrdinaryDiffEq
 using QuadGK
 using DelayDiffEq
+using FastGaussQuadrature
 
 
 struct Params
@@ -96,7 +95,11 @@ mutable struct EqObj
            crnd:: Float64
            cout:: Float64
     skilled_lab:: Float64
-       FAllend:: Float64
+        FAllend:: Float64
+        qMinAll:: Float64
+        qMaxAll:: Float64
+        node   :: Array{Float64,1}
+        weight :: Array{Float64,1}
 
     EqObj() = new()
 end
