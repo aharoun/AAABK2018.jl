@@ -13,7 +13,7 @@ function solveBGP(p)
   # gausslegendre for integration
   eq.qMinAll = 1.0e-8
   eq.qMaxAll = 10.0
-  eq.node,eq.weight = gausslegendre(3000)
+  eq.node,eq.weight = gausslegendre(1000)
   eq.node = ((eq.qMaxAll - eq.qMinAll)/2)*eq.node .+ (eq.qMaxAll + eq.qMinAll)/2    # adjust the limits
 
 
@@ -136,13 +136,6 @@ function qualityDist!(eq,p)
 
     # 2 - Gross dist.
     # different than matlab verison, we convert the problem to IVP by simply reversing time span
-    function funcFH!(du,u,pp,t)
-        delayT 	= min.(max.(0.0000001,t - betaDelay),10.0)
-        du[1] 	= ((eq.tau + p.ν)/(eq.g*t))*u[1] - (eq.taus[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
-    end
-
-    probFH = ODEProblem(funcFH!,[eq.taus[2]/(eq.tau + p.ν)],(tspan[2],tspan[1]))
-    eq.solFH = solve(probFH, Tsit5(),reltol=1e-8,abstol=1e-8)
 
     eq.PhiHG = eq.taus[2]/(eq.tau + p.ν);
     eq.PhiLG = 1.0 - eq.PhiHG;
@@ -150,33 +143,33 @@ function qualityDist!(eq,p)
     # 3 - Active product line dist.
     # Again same trick, solve IVP
     function funcFRest!(du,u,pp,t)
-      FHt   = eq.solFH(t)[1]
-      du[1] = ((eq.tau + p.ν + p.ψ)/(eq.g*t))*u[1] - (p.ψ/(eq.g.*t))*FHt
-      du[2] = ((eq.tau +       p.ψ)/(eq.g*t))*u[2] - (p.ψ/(eq.g*t))*(eq.solFAll(t)[1]/eq.FAllend - FHt) - (p.ν./(eq.g*t))*u[1]
+      delayT 	= min.(max.(0.0000001,t - betaDelay),10.0)
+      du[1] 	= ((eq.tau + p.ν)/(eq.g*t))*u[1] - (eq.taus[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
+      du[2] = ((eq.tau + p.ν + p.ψ)/(eq.g*t))*u[2] - (p.ψ/(eq.g.*t))*u[1]
+      du[3] = ((eq.tau +       p.ψ)/(eq.g*t))*u[3] - (p.ψ/(eq.g*t))*(eq.solFAll(t)[1]/eq.FAllend - u[1]) - (p.ν./(eq.g*t))*u[2]
     end
 
     boundHRest = (p.ψ/(eq.tau + p.ν + p.ψ))*eq.PhiHG
     boundLRest = (p.ψ/(eq.tau + p.ψ))*eq.PhiLG + (p.ν/(eq.tau + p.ψ))*boundHRest
 
-    probFRest   = ODEProblem(funcFRest!,[boundHRest,boundLRest],(tspan[2],tspan[1]))
+    probFRest   = ODEProblem(funcFRest!,[eq.PhiHG,boundHRest,boundLRest],(tspan[2],tspan[1]))
     eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-8,abstol=1e-8)
 
     # 4 - Update PhiL and PhiH
     FRestcut    = eq.solFRest(max.(1.0e-09,eq.qmin))
-    FHcut       = eq.solFH(max.(1.0e-09,eq.qmin))
     FAllcut     = eq.solFAll(max.(1.0e-09,eq.qmin))./eq.FAllend
 
-    eq.PhiHExo   = eq.solFRest(10.0)[1]
-    eq.PhiLExo   = eq.solFRest(10.0)[2]
+    eq.PhiHExo   = eq.solFRest(10.0)[2]
+    eq.PhiLExo   = eq.solFRest(10.0)[3]
 
-    eq.PhiHObso  = FHcut[1,2] - FRestcut[1,2]
-    eq.PhiLObso  = (FAllcut[1,1] - FHcut[1,1]) - FRestcut[2,1]
+    eq.PhiHObso  = FRestcut[1,2] - FRestcut[2,2]
+    eq.PhiLObso  = (FAllcut[1,1] - FRestcut[1,1]) - FRestcut[3,1]
 
 
     eq.cactiv[1] = (eq.PhiLG - eq.PhiLExo) - eq.PhiLObso
     eq.cactiv[2] = (eq.PhiHG - eq.PhiHExo) - eq.PhiHObso
     eq.cactivtot = sum(eq.cactiv);
-    eq.cinac     = 1.0 - eq.cactivtot;
+    eq.cinac     = 1 - eq.cactivtot
 
 
 end
@@ -191,11 +184,11 @@ end
 
 function funQbarAct(eq,p)
 
-        outFH    = vcat_nosplat(eq.solFH(eq.node,Val{1}),1)
+
         outRest  = eq.solFRest(eq.node,Val{1})
 
-        outL = (eq.qAllDist .- outFH .- vcat_nosplat(outRest,2)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[1])
-        outH = (outFH                .- vcat_nosplat(outRest,1)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[2])
+        outL = (eq.qAllDist .- vcat_nosplat(outRest,1) .- vcat_nosplat(outRest,3)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[1])
+        outH = (vcat_nosplat(outRest,1)                .- vcat_nosplat(outRest,2)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[2])
         return outL, outH
 end
 

@@ -106,7 +106,7 @@ end
 
 include("functions.jl")
 
-export Params, EqObj, solveBGP,eqfunc
+export Params, EqObj, solveBGP,eqfunc!
 
 
 
