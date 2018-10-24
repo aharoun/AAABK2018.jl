@@ -73,8 +73,8 @@ mutable struct EqObj
               x:: Array{Float64,1}
            xout:: Float64
          optval:: Array{Float64,1}
-           taus:: Array{Float64,1}
-            tau:: Float64
+             τs:: Array{Float64,1}
+              τ:: Float64
            qmin:: Array{Float64,1}
               g:: Float64
         solFAll:: ODESolution
