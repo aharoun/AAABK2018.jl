@@ -94,8 +94,8 @@ function innovation!(eq,p)
   eq.optval = p.γ*p.𝚯*((1.0 - p.γ)/eq.ws)^((1.0 - p.γ)/p.γ).*eq.eyq.^(1.0/p.γ)
 
   # aggregate creative destruction rates
-  eq.taus = eq.cactiv.*eq.x .+ p.𝛂*eq.xout
-  eq.tau  = sum(eq.taus)
+  eq.τs = eq.cactiv.*eq.x .+ p.𝛂*eq.xout
+  eq.τ  = sum(eq.τs)
 
   # minimum qhat
   eq.qmin = (max.(0,eq.ws*p.ϕ .- eq.optval)/p.Π).^(1.0/(p.ε-1.0))
@@ -113,12 +113,12 @@ function qualityDist!(eq,p)
     betaDelay  = (p.λ - 1.0)*p.ω*eq.qbar*alphaDelay;
 
     # 0 - Growth rate consistent with guessed qbar
-    eq.g = eq.tau*(p.λ - 1.0);
+    eq.g = eq.τ*(p.λ - 1.0);
 
     # 1 - Overall dist.function
     # to-do: for now it is written for ω=1. Make it general
     function funcFAll!(du,u,h,p,t)
-        du[1] = (eq.tau/(eq.g*t))*u[1] - (eq.tau/(eq.g*t))*h(p,t-betaDelay)[1] # to-do: tau/g= 1/(λ-1), we can simply use that
+        du[1] = (eq.τ/(eq.g*t))*u[1] - (eq.τ/(eq.g*t))*h(p,t-betaDelay)[1] # to-do: τ/g= 1/(λ-1), we can simply use that
     end
 
     #prob = DDEProblem(funcFAll!,u0,h,tspan, constant_lags = lags)
@@ -137,20 +137,20 @@ function qualityDist!(eq,p)
     # 2 - Gross dist.
     # different than matlab verison, we convert the problem to IVP by simply reversing time span
 
-    eq.PhiHG = eq.taus[2]/(eq.tau + p.ν);
+    eq.PhiHG = eq.τs[2]/(eq.τ + p.ν);
     eq.PhiLG = 1.0 - eq.PhiHG;
 
     # 3 - Active product line dist.
     # Again same trick, solve IVP
     function funcFRest!(du,u,pp,t)
       delayT 	= min.(max.(0.0000001,t - betaDelay),10.0)
-      du[1] 	= ((eq.tau + p.ν)/(eq.g*t))*u[1] - (eq.taus[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
-      du[2] = ((eq.tau + p.ν + p.ψ)/(eq.g*t))*u[2] - (p.ψ/(eq.g.*t))*u[1]
-      du[3] = ((eq.tau +       p.ψ)/(eq.g*t))*u[3] - (p.ψ/(eq.g*t))*(eq.solFAll(t)[1]/eq.FAllend - u[1]) - (p.ν./(eq.g*t))*u[2]
+      du[1] 	= ((eq.τ + p.ν)/(eq.g*t))*u[1] - (eq.τs[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
+      du[2] = ((eq.τ + p.ν + p.ψ)/(eq.g*t))*u[2] - (p.ψ/(eq.g.*t))*u[1]
+      du[3] = ((eq.τ +       p.ψ)/(eq.g*t))*u[3] - (p.ψ/(eq.g*t))*(eq.solFAll(t)[1]/eq.FAllend - u[1]) - (p.ν./(eq.g*t))*u[2]
     end
 
-    boundHRest = (p.ψ/(eq.tau + p.ν + p.ψ))*eq.PhiHG
-    boundLRest = (p.ψ/(eq.tau + p.ψ))*eq.PhiLG + (p.ν/(eq.tau + p.ψ))*boundHRest
+    boundHRest = (p.ψ/(eq.τ + p.ν + p.ψ))*eq.PhiHG
+    boundLRest = (p.ψ/(eq.τ + p.ψ))*eq.PhiLG + (p.ν/(eq.τ + p.ψ))*boundHRest
 
     probFRest   = ODEProblem(funcFRest!,[eq.PhiHG,boundHRest,boundLRest],(tspan[2],tspan[1]))
     eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-8,abstol=1e-8)
@@ -222,7 +222,7 @@ end
 
 function zfunc(q, x, s, eq, p)
 
-  psit = eq.r + eq.tau + p.ψ + x
+  psit = eq.r + eq.τ + p.ψ + x
 
   kappa1 = psit + (p.ε - 1.0)*eq.g
   kappa2 = psit
