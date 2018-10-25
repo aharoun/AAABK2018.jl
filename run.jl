@@ -1,7 +1,8 @@
 
 ########
-include("AAABK_Baseline.jl")
-using Main.AAABK_Baseline
+push!(LOAD_PATH, "/Users/h/Dropbox/Research/Reallocation/AAABK Julia Version")
+using Revise
+using AAABK_Baseline
 using BenchmarkTools
 
 λ =  1.131874350361868
@@ -24,4 +25,4 @@ Lˢ=  0.165500000000000
 p = Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω)
 
 eq,res = solveBGP(p);
-@time eq,res = solveBGP(p)
+@benchmark eq,res = solveBGP(p)
