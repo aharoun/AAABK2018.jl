@@ -1,11 +1,3 @@
-module AAABK_BaselineModel
-
-using NLsolve
-using LinearAlgebra
-using OrdinaryDiffEq
-using DelayDiffEq
-using FastGaussQuadrature
-
 
 struct Params
     λ :: Float64
@@ -35,7 +27,6 @@ struct Params
     ϕⁿˢ :: Any
 
 end
-
 
 
 function Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω; sⁱ = 0.0, sᶠ = 0.0, sᴱ = 0.0)
@@ -101,14 +92,4 @@ mutable struct EqObj
         qAllDist::Array{Float64,1}
 
     EqObj() = new()
-end
-
-include("functions.jl")
-
-export Params, EqObj, solveBGP,eqfunc!
-
-
-
-
-
 end

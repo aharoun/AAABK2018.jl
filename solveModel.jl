@@ -1,9 +1,6 @@
 
 ########
-push!(LOAD_PATH, "/Users/h/Dropbox/Research/Reallocation/AAABK Julia Version")
-using Revise
-using AAABK_BaselineModel
-using BenchmarkTools
+using AAABK2018
 
 λ =  1.131874350361868
 ψ =  0.037175089899834
