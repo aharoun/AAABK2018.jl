@@ -1,9 +1,8 @@
-module AAABK_Baseline
+module AAABK_BaselineModel
 
 using NLsolve
 using LinearAlgebra
 using OrdinaryDiffEq
-using QuadGK
 using DelayDiffEq
 using FastGaussQuadrature
 
