@@ -1,7 +1,7 @@
 
-########
+# Solving the baseline version of the model with estimated parameters
 using AAABK2018
-
+using BenchmarkTools
 λ =  1.131874350361868
 ψ =  0.037175089899834
 ν =  0.205622086535123
@@ -21,5 +21,5 @@ Lˢ=  0.165500000000000
 
 p = Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω)
 
-eq,res = solveBGP(p);
+eq,res = solveBGP(p)
 @benchmark eq,res = solveBGP(p)
