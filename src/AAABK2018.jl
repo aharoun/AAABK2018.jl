@@ -8,12 +8,11 @@ using FastGaussQuadrature
 using Statistics
 
 
-include("functionsDiffGeneralJump.jl")
 include("functionsSolveModel.jl")
 include("structures.jl")
 
 
-export Params, EqObj, solveBGP,eqfunc!,solveDiffEq, solveBVP, simDist
+export Params, EqObj, solveBGP,eqfunc!
 
 
 end # module
