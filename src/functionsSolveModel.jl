@@ -25,10 +25,10 @@
   res = nlsolve(objFnc, eqvInit, method = :trust_region,inplace = true)
 
   if !res.f_converged
-       print("👎")
+       print("👎!")
        eq = EqObj();  # return empty EqObj, type stability
   else
-       print("👍")
+       print("👍!")
   end
 
 
