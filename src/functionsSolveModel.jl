@@ -1,14 +1,6 @@
- function solveBGP(p)
+ function solveBGP(p,eqInit)
 
-  eqvInit = [ 1.9198736369588174
-              0.5503868348370163
-              0.06279896013321133
-              0.7150789880371538
-              0.8360884693649229
-              1.7321977926106504
-              ]
-
-  eq = EqObj();
+  eq = EqObj()   # initialize equilibrium object
 
   # gausslegendre for integration
   eq.qMinAll = 1.0e-8
@@ -19,14 +11,14 @@
 
 
   @inline function objFnc(eqnd,x)
-     eqfunc!(eqnd,x,eq,p);
+     eqfunc!(eqnd,x,eq,p)
   end
 
-  res = nlsolve(objFnc, eqvInit, method = :trust_region,inplace = true)
+  res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true)
 
   if !res.f_converged
        print("👎!")
-       eq = EqObj();  # return empty EqObj, type stability
+       eq = EqObj()  # return empty EqObj, type stability
   else
        print("👍!")
   end
@@ -109,11 +101,11 @@ end
 function qualityDist!(eq,p)
 
     # -1 - Parameters for delayed differential equation
-    alphaDelay = 1.0/(1.0 + (p.λ-1.0)*(1.0 - p.ω));
-    betaDelay  = (p.λ - 1.0)*p.ω*eq.qbar*alphaDelay;
+    alphaDelay = 1.0/(1.0 + (p.λ-1.0)*(1.0 - p.ω))
+    betaDelay  = (p.λ - 1.0)*p.ω*eq.qbar*alphaDelay
 
     # 0 - Growth rate consistent with guessed qbar
-    eq.g = eq.τ*(p.λ - 1.0);
+    eq.g = eq.τ*(p.λ - 1.0)
 
     # 1 - Overall dist.function
     # to-do: for now it is written for ω=1. Make it general
@@ -124,9 +116,9 @@ function qualityDist!(eq,p)
     #prob = DDEProblem(funcFAll!,u0,h,tspan, constant_lags = lags)
     tspan = (1.0e-09,10.0)
     lags = [betaDelay]
-    h(p,t)= [0.0];
+    h(p,t)= [0.0]
     probDelay  = DDEProblem(funcFAll!,[1.0e-16],h,tspan, constant_lags = lags)
-    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()),reltol=1e-8,abstol=1e-8) # to-do: we can directly get output at the nodes by using ``saveat``
+    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()),reltol=1e-6,abstol=1e-6) # to-do: we can directly get output at the nodes by using ``saveat``
     # option and pass it to integration functions. One thing to note: once saveat is used, between node results are linearly interpolated.
 
     eq.FAllend = eq.solFAll.u[end][1,1]  # needed for normalization
@@ -137,14 +129,14 @@ function qualityDist!(eq,p)
     # 2 - Gross dist.
     # different than matlab verison, we convert the problem to IVP by simply reversing time span
 
-    eq.PhiHG = eq.τs[2]/(eq.τ + p.ν);
-    eq.PhiLG = 1.0 - eq.PhiHG;
+    eq.PhiHG = eq.τs[2]/(eq.τ + p.ν)
+    eq.PhiLG = 1.0 - eq.PhiHG
 
     # 3 - Active product line dist.
     # Again same trick, solve IVP
     function funcFRest!(du,u,pp,t)
       delayT 	= min.(max.(0.0000001,t - betaDelay),10.0)
-      du[1] 	= ((eq.τ + p.ν)/(eq.g*t))*u[1] - (eq.τs[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
+      du[1] = ((eq.τ + p.ν)/(eq.g*t))*u[1] - (eq.τs[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
       du[2] = ((eq.τ + p.ν + p.ψ)/(eq.g*t))*u[2] - (p.ψ/(eq.g.*t))*u[1]
       du[3] = ((eq.τ +       p.ψ)/(eq.g*t))*u[3] - (p.ψ/(eq.g*t))*(eq.solFAll(t)[1]/eq.FAllend - u[1]) - (p.ν./(eq.g*t))*u[2]
     end
@@ -153,7 +145,7 @@ function qualityDist!(eq,p)
     boundLRest = (p.ψ/(eq.τ + p.ψ))*eq.PhiLG + (p.ν/(eq.τ + p.ψ))*boundHRest
 
     probFRest   = ODEProblem(funcFRest!,[eq.PhiHG,boundHRest,boundLRest],(tspan[2],tspan[1]))
-    eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-8,abstol=1e-8)
+    eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-6,abstol=1e-6)
 
     # 4 - Update PhiL and PhiH
     FRestcut    = eq.solFRest(max.(1.0e-09,eq.qmin))
@@ -168,8 +160,8 @@ function qualityDist!(eq,p)
 
     eq.cactiv[1] = (eq.PhiLG - eq.PhiLExo) - eq.PhiLObso
     eq.cactiv[2] = (eq.PhiHG - eq.PhiHExo) - eq.PhiHObso
-    eq.cactivtot = sum(eq.cactiv);
-    eq.cinac     = 1 - eq.cactivtot
+    eq.cactivtot = sum(eq.cactiv)
+    eq.cinac     = 1.0 - eq.cactivtot
 
 
 end
@@ -183,8 +175,6 @@ end
 ########
 
 function funQbarAct(eq,p)
-
-
         outRest  = eq.solFRest(eq.node,Val{1})
 
         outL = (eq.qAllDist .- vcat_nosplat(outRest,1) .- vcat_nosplat(outRest,3)).*(eq.node.^(p.ε-1)).*(eq.node.>=eq.qmin[1])
@@ -228,10 +218,10 @@ function zfunc(q, x, s, eq, p)
   kappa2 = psit
 
   coeff1 = p.Π
-  coeff2 = eq.optval[s] - eq.ws*p.ϕ;
+  coeff2 = eq.optval[s] - eq.ws*p.ϕ
 
   # this min means that when q <= qmin, qrat = 1.0, so the value contribution is zero
-  qrat = min.(1.0,eq.qmin[s]./q);
+  qrat = min.(1.0,eq.qmin[s]./q)
 
   zout = coeff1/kappa1.*q.^(p.ε-1.0).*(1.0 .- qrat.^(kappa1/eq.g)) .+ coeff2/kappa2.*(1.0 .- qrat.^(kappa2/eq.g))
 
@@ -253,7 +243,7 @@ function labordem!(eq,p)
   eq.crnd = sum(eq.cactiv.*eq.cx)
 
   # entrant R&D labor
-  eq.cout = (eq.xout/(p.θᴱⁿˢ^p.γᴱ))^(1.0/(1.0-p.γᴱ));
+  eq.cout = (eq.xout/(p.θᴱⁿˢ^p.γᴱ))^(1.0/(1.0-p.γᴱ))
 
   # total skilled labor
   eq.skilled_lab = eq.crnd + eq.cfix + eq.cout

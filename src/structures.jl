@@ -1,4 +1,5 @@
 
+# parameters
 struct Params
     λ :: Float64
     ψ :: Float64
@@ -17,21 +18,21 @@ struct Params
     ω :: Float64
 
     # transformed
-    Π :: Any
-    𝛎 :: Any
-    𝛂 :: Any
-    𝚯 :: Any
+    Π :: Float64
+    𝛎 :: Array{Float64,1}
+    𝛂 :: Array{Float64,1}
+    𝚯 :: Array{Float64,1}
     #
-    𝚯ⁿˢ :: Any
-    θᴱⁿˢ:: Any
-    ϕⁿˢ :: Any
+    𝚯ⁿˢ :: Array{Float64,1}
+    θᴱⁿˢ:: Float64
+    ϕⁿˢ :: Float64
 
 end
 
 
 function Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω; sⁱ = 0.0, sᶠ = 0.0, sᴱ = 0.0)
     # with policy
-    Π = (1/(ε-1))*((ε-1)/ε)^ε
+    Π = (1.0/(ε-1.0))*((ε-1.0)/ε)^ε
     𝛎 = [0.0, ν]
     𝛂 = [1.0 - α, α]
     𝚯 = [θˡ, θʰ]
@@ -53,6 +54,7 @@ function Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ,
     Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, Π, 𝛎, 𝛂, 𝚯, 𝚯ⁿˢ, θᴱⁿˢ, ϕⁿˢ)
 end
 
+# equilibirum object
 mutable struct EqObj
              ws:: Float64
          cactiv:: Array{Float64,1}
