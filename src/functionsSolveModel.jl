@@ -62,7 +62,7 @@ function eqfunc!(eqnd,eqv,eq,p)
 
     # equilibrium differences
 
-    eqnd[1]   = eq.skilled_lab - p.Lˢ                # skilled labor market clearing
+    eqnd[1]   = eq.skilled_lab - p.Lˢ           # skilled labor market clearing
     eqnd[2:3] = eq.cactiv      - eqv[2:3]       # product shares
     eqnd[4:5] = eq.eyq         - eqv[4:5]       # innovated product value
     eqnd[6]   = eq.qbarAct     - (p.ε/(p.ε-1.0))^(p.ε - 1)

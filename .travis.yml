@@ -1,0 +1,14 @@
+language: julia
+julia:
+  - nightly
+  - 1.0
+
+matrix:
+  allow_failures:
+    - julia: nightly
+
+after_success:    
+- julia -e 'using Pkg; cd(Pkg.dir("AAABK2018")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'    
+    
+notifications:
+  email: false    

@@ -70,7 +70,6 @@ mutable struct EqObj
            qmin:: Array{Float64,1}
               g:: Float64
         solFAll:: ODESolution
-          solFH:: ODESolution
           PhiHG:: Float64
           PhiLG:: Float64
        solFRest:: ODESolution
