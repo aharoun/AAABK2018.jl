@@ -18,4 +18,4 @@ eqInit = [ 1.9198743429837333, 0.5503951853312194, 0.06279563047969441,
            0.7151009125087638, 0.8361141441649012, 1.7322094255709095]
 
 # solve
-@time eq,res = solveBGP(p,eqInit);
+@benchmark eq,res = solveBGP(p,eqInit)

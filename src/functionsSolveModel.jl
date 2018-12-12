@@ -108,12 +108,10 @@ function qualityDist!(eq,p)
     eq.g = eq.τ*(p.λ - 1.0)
 
     # 1 - Overall dist.function
-    # to-do: for now it is written for ω=1. Make it general
     function funcFAll!(du,u,h,p,t)
-        du[1] = (eq.τ/(eq.g*t))*u[1] - (eq.τ/(eq.g*t))*h(p,t-betaDelay)[1] # to-do: τ/g= 1/(λ-1), we can simply use that
+        du[1] = (eq.τ/(eq.g*t))*u[1] - (eq.τ/(eq.g*t))*h(p,t-betaDelay)[1] 
     end
 
-    #prob = DDEProblem(funcFAll!,u0,h,tspan, constant_lags = lags)
     tspan = (1.0e-09,10.0)
     lags = [betaDelay]
     h(p,t)= [0.0]
@@ -125,29 +123,34 @@ function qualityDist!(eq,p)
 
     eq.qAllDist  = vcat_nosplat(eq.solFAll(eq.node,Val{1}),1).*(1/eq.FAllend) # saving for later use
 
-
-    # 2 - Gross dist.
+    # 2 -  Gross dist. and active product line dist.
     # different than matlab verison, we convert the problem to IVP by simply reversing time span
-
     eq.PhiHG = eq.τs[2]/(eq.τ + p.ν)
     eq.PhiLG = 1.0 - eq.PhiHG
 
-    # 3 - Active product line dist.
-    # Again same trick, solve IVP
+    @inline function getFAllVal(t)
+      delayT 	= min(max(0.0000001,t - betaDelay),10.0)
+      fAll = eq.solFAll(t)[1,1]/eq.FAllend
+      fAllDelay = eq.solFAll(delayT)[1,1]/eq.FAllend
+      return fAll::Float64,fAllDelay::Float64
+    end
+
     function funcFRest!(du,u,pp,t)
-      delayT 	= min.(max.(0.0000001,t - betaDelay),10.0)
-      du[1] = ((eq.τ + p.ν)/(eq.g*t))*u[1] - (eq.τs[2]/(eq.g*t))*eq.solFAll(delayT)[1]/eq.FAllend
+      fAll,fAllDelay = getFAllVal(t)
+  
+      du[1] = ((eq.τ + p.ν)/(eq.g*t))*u[1] - (eq.τs[2]/(eq.g*t))*fAllDelay
       du[2] = ((eq.τ + p.ν + p.ψ)/(eq.g*t))*u[2] - (p.ψ/(eq.g.*t))*u[1]
-      du[3] = ((eq.τ +       p.ψ)/(eq.g*t))*u[3] - (p.ψ/(eq.g*t))*(eq.solFAll(t)[1]/eq.FAllend - u[1]) - (p.ν./(eq.g*t))*u[2]
+      du[3] = ((eq.τ +       p.ψ)/(eq.g*t))*u[3] - (p.ψ/(eq.g*t))*(fAll - u[1]) - (p.ν/(eq.g*t))*u[2]
     end
 
     boundHRest = (p.ψ/(eq.τ + p.ν + p.ψ))*eq.PhiHG
     boundLRest = (p.ψ/(eq.τ + p.ψ))*eq.PhiLG + (p.ν/(eq.τ + p.ψ))*boundHRest
 
-    probFRest   = ODEProblem(funcFRest!,[eq.PhiHG,boundHRest,boundLRest],(tspan[2],tspan[1]))
+    u0 = [eq.PhiHG,boundHRest,boundLRest]
+    probFRest   = ODEProblem(funcFRest!,u0,(tspan[2],tspan[1]))
     eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-6,abstol=1e-6)
 
-    # 4 - Update PhiL and PhiH
+    # 3 - Update PhiL and PhiH
     FRestcut    = eq.solFRest(max.(1.0e-09,eq.qmin))
     FAllcut     = eq.solFAll(max.(1.0e-09,eq.qmin))./eq.FAllend
 

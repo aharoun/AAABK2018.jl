@@ -7,7 +7,6 @@ using DelayDiffEq
 using FastGaussQuadrature
 using Statistics
 
-
 include("functionsSolveModel.jl")
 include("structures.jl")
 
