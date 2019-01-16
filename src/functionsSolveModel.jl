@@ -14,13 +14,14 @@
      eqfunc!(eqnd,x,eq,p)
   end
 
-  res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true)
+  res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true,show_trace=true,iterations=2000)
 
   if !res.f_converged
        print("👎!")
        eq = EqObj()  # return empty EqObj, type stability
   else
        print("👍!")
+       eqfunc!(similar(res.zero),res.zero,eq,p)   # evaluate at minimizer
   end
 
 
@@ -116,7 +117,7 @@ function qualityDist!(eq,p)
     lags = [betaDelay]
     h(p,t)= [0.0]
     probDelay  = DDEProblem(funcFAll!,[1.0e-16],h,tspan, constant_lags = lags)
-    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()),reltol=1e-6,abstol=1e-6) # to-do: we can directly get output at the nodes by using ``saveat``
+    eq.solFAll = solve(probDelay,MethodOfSteps(Tsit5()),reltol=1e-8,abstol=1e-8) # to-do: we can directly get output at the nodes by using ``saveat``
     # option and pass it to integration functions. One thing to note: once saveat is used, between node results are linearly interpolated.
 
     eq.FAllend = eq.solFAll.u[end][1,1]  # needed for normalization
@@ -148,7 +149,7 @@ function qualityDist!(eq,p)
 
     u0 = [eq.PhiHG,boundHRest,boundLRest]
     probFRest   = ODEProblem(funcFRest!,u0,(tspan[2],tspan[1]))
-    eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-6,abstol=1e-6)
+    eq.solFRest = solve(probFRest, Tsit5(),reltol=1e-8,abstol=1e-8)
 
     # 3 - Update PhiL and PhiH
     FRestcut    = eq.solFRest(max.(1.0e-09,eq.qmin))

@@ -1,6 +1,5 @@
 
 # Solving the baseline version of the model with estimated parameters
-using Revise
 using AAABK2018
 using BenchmarkTools
 
@@ -14,8 +13,12 @@ using BenchmarkTools
 p = Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω)
 
 # initial guess for equilibirum objects
-eqInit = [ 1.9198743429837333, 0.5503951853312194, 0.06279563047969441,
-           0.7151009125087638, 0.8361141441649012, 1.7322094255709095]
+eqInit = [ 1.9198736368852545
+		   0.5503923039051236
+		   0.06279921173287425
+		   0.71509769657668
+		   0.8361078440727986
+		   1.7322082818718596] 
 
 # solve
-@benchmark eq,res = solveBGP(p,eqInit)
+@time eq,res = solveBGP(p,eqInit);
