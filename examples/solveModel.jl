@@ -1,7 +1,6 @@
 
 # Solving the baseline version of the model with estimated parameters
 using AAABK2018
-using BenchmarkTools
 
 # parameters
 λ =  1.131874350361868; ψ =  0.037175089899834; ν =  0.205622086535123
@@ -21,4 +20,4 @@ eqInit = [ 1.9198736368852545
 		   1.7322082818718596] 
 
 # solve
-@time eq,res = solveBGP(p,eqInit);
+eq,res = solveBGP(p,eqInit);
