@@ -12,12 +12,20 @@ using AAABK2018
 p = Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω)
 
 # initial guess for equilibirum objects
-eqInit = [ 1.9198736368852545
-		   0.5503923039051236
-		   0.06279921173287425
-		   0.71509769657668
-		   0.8361078440727986
-		   1.7322082818718596] 
+eqInit = [ 1.91, 0.55, 0.06,
+		   0.72, 0.83, 1.73] 
 
 # solve
 eq,res = solveBGP(p,eqInit);
+
+# solve with 5% incumbent R&D subsidy
+pIncSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sⁱ = 0.05)
+eqIncSub,resIncSub = solveBGP(pIncSub, eqInit)
+
+# solve with 5% operation cost subsidy
+pFixSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᶠ = 0.05)
+eqFixSub,resFixSub = solveBGP(pFixSub,eqInit)
+
+# solve with 5% entrant R&D subsidy
+pEntSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᴱ= 0.05)
+eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)

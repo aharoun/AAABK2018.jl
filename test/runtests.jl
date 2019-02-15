@@ -15,3 +15,24 @@ eqInit = [ 1.3, 0.3, 0.1,
 eq,res = solveBGP(p,eqInit)
 
 @test res.f_converged | res.x_converged
+
+# solve with 5% incumbent R&D subsidy
+pIncSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sⁱ = 0.05)
+eqIncSub,resIncSub = solveBGP(pIncSub, eqInit)
+
+@test resIncSub.f_converged | resIncSub.x_converged
+
+# solve with 5% operation cost subsidy
+pFixSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᶠ = 0.05)
+eqFixSub,resFixSub = solveBGP(pFixSub,eqInit)
+
+@test resFixSub.f_converged | resFixSub.x_converged
+# solve with 5% entrant R&D subsidy
+pEntSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᴱ= 0.05)
+eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)
+
+@test resEntSub.f_converged | resEntSub.x_converged
+
+@test all(eqIncSub.x .> eq.x)
+@test all(eqFixSub.x .< eq.x)
+@test all(eqEntSub.x .< eq.x)

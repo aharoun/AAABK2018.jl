@@ -17,10 +17,10 @@
   res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true,show_trace=true,iterations=2000)
 
   if !res.f_converged
-       print("👎!")
+       print("👎")
        eq = EqObj()  # return empty EqObj, type stability
   else
-       print("👍!")
+       print("👍")
        eqfunc!(similar(res.zero),res.zero,eq,p)   # evaluate at minimizer
   end
 
