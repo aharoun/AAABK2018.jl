@@ -9,7 +9,9 @@ matrix:
     - julia: nightly
 
 after_success:    
-- julia -e 'using Pkg; cd(Pkg.dir("AAABK2018")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'    
+- julia -e 'using Pkg; cd(Pkg.dir("AAABK2018")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())' 
+- julia -e 'using Pkg; cd(Pkg.dir("AAABK2018")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+
     
 notifications:
   email: false    
