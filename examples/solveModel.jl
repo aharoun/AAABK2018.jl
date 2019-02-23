@@ -20,12 +20,12 @@ eq,res = solveBGP(p,eqInit);
 
 # solve with 5% incumbent R&D subsidy
 pIncSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sⁱ = 0.05)
-eqIncSub,resIncSub = solveBGP(pIncSub, eqInit)
+eqIncSub,resIncSub = solveBGP(pIncSub, eqInit);
 
 # solve with 5% operation cost subsidy
 pFixSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᶠ = 0.05)
-eqFixSub,resFixSub = solveBGP(pFixSub,eqInit)
+eqFixSub,resFixSub = solveBGP(pFixSub,eqInit);
 
 # solve with 5% entrant R&D subsidy
 pEntSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᴱ= 0.05)
-eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)
+eqEntSub,resEntSub = solveBGP(pEntSub,eqInit);
