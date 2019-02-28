@@ -29,3 +29,13 @@ eqFixSub,resFixSub = solveBGP(pFixSub,eqInit);
 # solve with 5% entrant R&D subsidy
 pEntSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᴱ= 0.05)
 eqEntSub,resEntSub = solveBGP(pEntSub,eqInit);
+
+
+# optimal policy
+# one-tool policies
+optPolInc, res = policy_opt(p, sⁱ = true)
+optPolFix, res = policy_opt(p, sᶠ = true)
+optPolEnt, res = policy_opt(p, sᴱ = true)
+
+# two-tool policy
+optPolInc&Fix, res = policy_opt(p, sⁱ = true, sᶠ = true)
