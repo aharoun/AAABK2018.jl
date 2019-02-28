@@ -14,7 +14,7 @@
      eqfunc!(eqnd,x,eq,p)
   end
 
-  res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true,show_trace=false,iterations=200)
+  res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true,show_trace=false,iterations=50)
   
   if !res.f_converged 
 	println("Second solver...")
@@ -22,8 +22,7 @@
 	ftol_rel!(opt,1e-8)
 	min_objective!(opt, (x, grad) -> eqfunc!(ones(length(eqInit))*1000.0,x,eq,p))
 	minf,minx,ret = NLopt.optimize(opt, eqInit)
-	
-	res = nlsolve(objFnc, minx, method = :trust_region,inplace = true,show_trace=false,iterations=200)
+	res = nlsolve(objFnc, minx, method = :trust_region,inplace = true,show_trace=false,iterations=50)
 
   end
 
@@ -82,7 +81,7 @@ function eqfunc!(eqnd,eqv,eq,p)
 
 
   end
-
+  return sum(abs2.(eqnd))	
 end
 
 
