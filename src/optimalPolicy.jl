@@ -6,7 +6,7 @@ function policy_opt(p ;sⁱ = false, sᶠ = false, sᴱ = false)
 
   
 # first solve without policy  
-  eqInit = [ 1.91, 0.55, 0.06,
+  eqInit = [ 2.00, 0.55, 0.06,
              0.72, 0.83, 1.73]
 
   eq,res = solveBGP(p,eqInit) 

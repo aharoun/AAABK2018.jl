@@ -12,7 +12,7 @@ using AAABK2018
 p = Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω)
 
 # initial guess for equilibirum objects
-eqInit = [ 1.91, 0.55, 0.06,
+eqInit = [ 2.00, 0.55, 0.06,
 		   0.72, 0.83, 1.73] 
 
 # solve
