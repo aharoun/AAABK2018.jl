@@ -16,16 +16,6 @@
 
   res = nlsolve(objFnc, eqInit, method = :trust_region,inplace = true,show_trace=false,iterations=50)
   
-  if !res.f_converged 
-	println("Second solver...")
-	opt = Opt(:LN_NELDERMEAD, length(eqInit))
-	ftol_rel!(opt,1e-8)
-	min_objective!(opt, (x, grad) -> eqfunc!(ones(length(eqInit))*1000.0,x,eq,p))
-	minf,minx,ret = NLopt.optimize(opt, eqInit)
-	res = nlsolve(objFnc, minx, method = :trust_region,inplace = true,show_trace=false,iterations=50)
-
-  end
-
   if !res.f_converged
        #print("👎")
 	   println("Couldn't solve!!!")	
@@ -81,7 +71,6 @@ function eqfunc!(eqnd,eqv,eq,p)
 
 
   end
-  return sum(abs2.(eqnd))	
 end
 
 
