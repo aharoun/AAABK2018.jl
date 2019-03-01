@@ -39,13 +39,13 @@ eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)
 
 # optimal policy
 # one-tool policies
-optPol, res = policy_opt(p, sⁱ = true)
-@test res.ret == :FTOL_REACHED 
-optPol, res = policy_opt(p, sᶠ = true)
-@test res.ret == :FTOL_REACHED 
-optPol, res = policy_opt(p, sᴱ = true)
-@test res.ret == :FTOL_REACHED 
+optPol = policy_opt(p, sⁱ = true)
+@test optPol[:ret] == :FTOL_REACHED 
+optPol = policy_opt(p, sᶠ = true)
+@test optPol[:ret] == :FTOL_REACHED 
+optPol = policy_opt(p, sᴱ = true)
+@test optPol[:ret] == :FTOL_REACHED 
 
 # two-tool policy
-optPol, res = policy_opt(p, sⁱ = true, sᶠ = true)
-@test res.ret == :FTOL_REACHED 
+optPol = policy_opt(p, sⁱ = true, sᶠ = true)
+@test optPol[:ret] == :FTOL_REACHED 

@@ -33,9 +33,9 @@ eqEntSub,resEntSub = solveBGP(pEntSub,eqInit);
 
 # optimal policy
 # one-tool policies
-optPolInc, res = policy_opt(p, sⁱ = true)
-optPolFix, res = policy_opt(p, sᶠ = true)
-optPolEnt, res = policy_opt(p, sᴱ = true)
+optPolInc = policy_opt(p, sⁱ = true)
+optPolFix = policy_opt(p, sᶠ = true)
+optPolEnt = policy_opt(p, sᴱ = true)
 
 # two-tool policy
-optPolInc&Fix, res = policy_opt(p, sⁱ = true, sᶠ = true)
+optPolInc_Fix = policy_opt(p, sⁱ = true, sᶠ = true)
