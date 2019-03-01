@@ -16,11 +16,14 @@ function policy_opt(p ;sⁱ = false, sᶠ = false, sᴱ = false)
   
   @printf("Baseline Welfare is %3.4f \n", cevMax[1])
 
+  # optimization
+  # ------------------------------------------------------------------------------------------------
   opt = Opt(:LN_NELDERMEAD, npol)
   ftol_rel!(opt,1e-8)
   min_objective!(opt, (x, grad) -> policy_obj(x, poltype, p, eqInit, cevMax, eq.g, eq.cactivtot))
   minf,minpol,ret = NLopt.optimize(opt, polinit)
   nEvals = opt.numevals
+  #-------------------------------------------------------------------------------------------------
   
   if ret == :FTOL_REACHED 
   	@printf("Optimal policy found!\n\n")	
@@ -41,10 +44,7 @@ function policy_obj(polguess, poltype, p, eqInit, cevMax, gBase, cactivtotBase)
   polval = zeros(3)
   polval[poltype] .= polguess
 
-  pNew = Params(p.λ,  p.ψ,  p.ν,  p.α,  p.ϕ, 
-                p.θˡ, p.θʰ, p.θᴱ, p.ε,  p.ρ, 
-                p.γ,  p.γᴱ, p.σ,  p.Lˢ, p.ω, 
-                sⁱ = polval[1], sᶠ = polval[2], sᴱ = polval[3])
+  pNew = Params(p, (sⁱ = polval[1], sᶠ = polval[2], sᴱ = polval[3]))
   
   eq, res = solveBGP(pNew, eqInit)
   

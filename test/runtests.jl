@@ -17,18 +17,19 @@ eq,res = solveBGP(p,eqInit)
 @test res.f_converged | res.x_converged
 
 # solve with 5% incumbent R&D subsidy
-pIncSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sⁱ = 0.05)
+pIncSub = Params(p, (sⁱ = 0.05,))
 eqIncSub,resIncSub = solveBGP(pIncSub, eqInit)
 
 @test resIncSub.f_converged | resIncSub.x_converged
 
 # solve with 5% operation cost subsidy
-pFixSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᶠ = 0.05)
+pFixSub = Params(p, (sᶠ = 0.05,))
 eqFixSub,resFixSub = solveBGP(pFixSub,eqInit)
 
 @test resFixSub.f_converged | resFixSub.x_converged
+
 # solve with 5% entrant R&D subsidy
-pEntSub = Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, sᴱ= 0.05)
+pEntSub = Params(p, (sᴱ= 0.05,))
 eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)
 
 @test resEntSub.f_converged | resEntSub.x_converged
@@ -41,11 +42,22 @@ eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)
 # one-tool policies
 optPol = policy_opt(p, sⁱ = true)
 @test optPol[:ret] == :FTOL_REACHED 
+@test abs(optPol[:sⁱ] - 0.39) < .01    # compare with results from the paper
+@test abs(optPol[:cev]/1.0122 - 1.0) < 1.0e-4    # compare with results from the paper
+
 optPol = policy_opt(p, sᶠ = true)
 @test optPol[:ret] == :FTOL_REACHED 
+@test abs(optPol[:sᶠ] + 0.69) < .01    # compare with results from the paper
+@test abs(optPol[:cev]/1.0142 - 1.0) < 1.0e-4    # compare with results from the paper
+
 optPol = policy_opt(p, sᴱ = true)
 @test optPol[:ret] == :FTOL_REACHED 
+@test abs(optPol[:sᴱ] - 0.18) < .01    # compare with results from the paper
+@test abs(optPol[:cev]/1.0004 - 1.0) < 1.0e-4    # compare with results from the paper
 
 # two-tool policy
 optPol = policy_opt(p, sⁱ = true, sᶠ = true)
 @test optPol[:ret] == :FTOL_REACHED 
+@test abs(optPol[:sⁱ] + 0.03) < .01    # compare with results from the paper
+@test abs(optPol[:sᶠ] + 0.74) < .01    # compare with results from the paper
+@test abs(optPol[:cev]/1.0142 - 1.0) < 1.0e-4    # compare with results from the paper

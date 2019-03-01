@@ -18,7 +18,7 @@
   
   if !res.f_converged
        #print("👎")
-	   println("Couldn't solve!!!")	
+       #println("Couldn't solve!!!")	
        eq = EqObj()  # return empty EqObj, type stability
   else
        #print("👍")

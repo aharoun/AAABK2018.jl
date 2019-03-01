@@ -58,6 +58,21 @@ function Params(λ,ψ,ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ,
     Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω, Π, 𝛎, 𝛂, 𝚯, 𝚯ⁿˢ, θᴱⁿˢ, ϕⁿˢ, sⁱ, sᶠ, sᴱ)
 end
 
+# easy modification of a parametrization
+function Params(p::Params, modifiedParams::NamedTuple)
+    # copy p
+    for name in fieldnames(Params)
+        eval(Meta.parse("$name = getproperty($p,:$name)"))
+    end
+    # replace with modifiedParams
+    for name in fieldnames(typeof(modifiedParams))
+        eval(Meta.parse("$name = getproperty($modifiedParams,:$name)"))
+    end
+
+    Params(λ, ψ, ν, α, ϕ, θˡ, θʰ, θᴱ, ε, ρ, γ, γᴱ, σ, Lˢ, ω; sⁱ = sⁱ, sᶠ = sᶠ, sᴱ = sᴱ)
+end
+
+
 # equilibirum object
 mutable struct EqObj
              ws:: Float64
