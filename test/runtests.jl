@@ -38,6 +38,14 @@ eqEntSub,resEntSub = solveBGP(pEntSub,eqInit)
 @test all(eqFixSub.x .< eq.x)
 @test all(eqEntSub.x .< eq.x)
 
+# social planner problem
+eqSoc,resSoc = solveSocialPlanner(p)
+@test resSoc[:ret] == :FTOL_REACHED 
+@test abs(resSoc[:cev]/1.0447 - 1.0) < 1.0e-3    # compare with results from the paper
+@test abs(eqSoc.x[1]/0.2542 - 1.0)   < 1.0e-3    # compare with results from the paper
+@test abs(eqSoc.x[2]/0.4534 - 1.0)   < 1.0e-3    # compare with results from the paper
+@test abs(eqSoc.qmin[1]/2.4042 - 1.0)< 1.0e-1    # compare with results from the paper
+
 # optimal policy
 # one-tool policies
 optPol = policy_opt(p, sⁱ = true)

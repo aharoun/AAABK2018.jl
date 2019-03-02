@@ -13,7 +13,8 @@ function policy_opt(p ;sⁱ = false, sᶠ = false, sᴱ = false)
   eqInit.= res.zero	
 
   cevMax = [calCev(eq.g, eq.cactivtot,eq.g, eq.cactivtot,p)]	
-  
+  @printf("OPTIMAL POLICY\n")
+  @printf("----------------------------\n")
   @printf("Baseline Welfare is %3.4f \n", cevMax[1])
 
   # optimization
@@ -62,7 +63,7 @@ function policy_obj(polguess, poltype, p, eqInit, cevMax, gBase, cactivtotBase)
 	poltype[2] ? @printf("sᶠ = %2.2f", pNew.sᶠ) : nothing
 	poltype[2]&poltype[3] ? @printf(",") : nothing	 
 	poltype[3] ? @printf("sᴱ = %2.2f", pNew.sᴱ) : nothing
-    @printf(")\n") 
+	@printf(")\n") 
 	cevMax[1] = cev
   end
   return -cev

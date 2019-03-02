@@ -30,6 +30,8 @@ eqFixSub,resFixSub = solveBGP(pFixSub,eqInit);
 pEntSub = Params(p, (sᴱ = 0.05,))
 eqEntSub,resEntSub = solveBGP(pEntSub,eqInit);
 
+#social planner problem
+eqSoc,resSoc = solveSocialPlanner(p)
 
 # optimal policy
 # one-tool policies
