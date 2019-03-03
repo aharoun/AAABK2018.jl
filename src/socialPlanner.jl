@@ -27,9 +27,9 @@ function solveSocialPlanner(p)
   nEvals = opt.numevals
   #-------------------------------------------------------------------------------------------------
   
-  if ret == :FTOL_REACHED 
+  if ret == :FTOL_REACHED || ret == :XTOL_REACHED 
   	@printf("Optimal policy found!\n\n")
-    eqSoc = socialPlannerFunc(minpol,  p, eqSocInit, cevMax, eq.g, eq.cactivtot)[2]
+        eqSoc = socialPlannerFunc(minpol,  p, eqSocInit, cevMax, eq.g, eq.cactivtot)[2]
 	res = Dict(:cev=>-minf, :ret=>ret, :opt=>opt, :nEvals=>nEvals) 
   	return eqSoc, res   
   else
