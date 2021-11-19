@@ -3,7 +3,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/kekgf9f10c6p2mro/branch/master?svg=true)](https://ci.appveyor.com/project/aharoun/aaabk2018-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/aharoun/AAABK2018.jl/badge.svg)](https://coveralls.io/github/aharoun/AAABK2018.jl)
 
-This package solves the baseline model in Acemoglu et al (2018), "[Innovation, Reallocation, and Growth](https://www.harunalp.net/files/papers/aer.20130470.pdf)" in Julia.
+This package solves the baseline model in Acemoglu et al (2018), "[Innovation, Reallocation, and Growth](https://www.aeaweb.org/articles?id=10.1257/aer.20130470)" in Julia.
 
 To add the package, run the following code:
 ``` julia
